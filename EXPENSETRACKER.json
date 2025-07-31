@@ -1,0 +1,758 @@
+{
+  "name": "EXPENSETRACKER copy",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        256
+      ],
+      "id": "6ab40958-5af4-4837-a2ae-6222edd0c90e",
+      "name": "Telegram Trigger",
+      "webhookId": "cb94cea2-422f-4ebe-8cb6-c56e54348e0c",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input text and date\nconst inputText = $input.first().json.message.text;\nconst unixDate = $input.first().json.message.date;\n\n// Split the input text into item and price\nconst [item, price] = inputText.split(' ').map(str => str.trim());\n\n// Convert Unix timestamp to dd/mm/yyyy format\nconst date = new Date(unixDate * 1000); // Convert seconds to milliseconds\nconst formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;\n\n// Return the structured output\nreturn [{\n  json: {\n    item: item, // e.g., \"Murgi\"\n    price: parseInt(price), // e.g., 200\n    date: formattedDate // e.g., \"18/07/2025\"\n\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f80c9ceb-9559-42bd-aee0-f3ad56f5ddc3",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://url/items.json",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=item",
+              "value": "={{ $json.item }}"
+            },
+            {
+              "name": "price",
+              "value": "={{ $json.price }}"
+            },
+            {
+              "name": "date",
+              "value": "={{ $json.date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2d19565f-962e-4998-aca3-effe2c88eff7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8f20e47-30d9-49d4-b04c-532732b37fbe",
+              "leftValue": "={{ /\\w+ \\d+/.test($json[\"message\"][\"text\"]) }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        16
+      ],
+      "id": "f4441986-9b51-43b2-9470-296a37dd1c11",
+      "name": "ITEM"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8f20e47-30d9-49d4-b04c-532732b37fbe",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "=/erase",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        256
+      ],
+      "id": "9f8a078f-bd97-42af-8bda-16ce4933754e",
+      "name": "ERASE LAST ENTRY"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8f20e47-30d9-49d4-b04c-532732b37fbe",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "=/report",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        480
+      ],
+      "id": "42e46c3d-3460-49c8-b78e-7c800bcf8a2d",
+      "name": "GIVE LAST WEEK REPORT"
+    },
+    {
+      "parameters": {
+        "url": "https://url/items.json?orderBy=\"$key\"&limitToLast=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        240
+      ],
+      "id": "94f00429-3ba9-4016-8c9d-1cb55b5a4a0d",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://url/items/{{ $json.entryId }}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        240
+      ],
+      "id": "45c9246a-f3bc-4340-9618-0b91d0a617f0",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst entryId = Object.keys(data)[0];\nconst entryData = data[entryId];\nreturn [{\n  json: {\n    entryId: entryId,\n    item: entryData.item,\n    price: entryData.price,\n    date: entryData.date\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        240
+      ],
+      "id": "c36828e4-b5f6-4ed1-b990-3610119e98a8",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "chatId": "your_id",
+        "text": "=🗑️ DELETED ITEM:  {{ $('Code1').item.json.item }} PRICE: {{ $('Code1').item.json.price }} DATE: {{ $('Code1').item.json.date }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        240
+      ],
+      "id": "0edc6344-9d90-4ea5-a8f9-2499932eeaac",
+      "name": "Send a text message1",
+      "webhookId": "ba65ecfe-0998-4c20-94a5-b97c57a801b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "your_id",
+        "text": "=✅ Date: {{ $('Code').item.json.date }}\nItem:{{ $('Code').item.json.item }} and price: {{ $('Code').item.json.price }}  added in the database",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "a4ff1b06-7631-469d-8d92-760466c43559",
+      "name": "send confirmation message",
+      "webhookId": "d31fa73d-844f-4c37-b8b4-8cbedcdd0c80",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://url/items.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "print",
+              "value": "pretty"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        48,
+        464
+      ],
+      "id": "1b352d54-003e-4112-b5e9-04cebffd3b54",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst now = new Date(); // Current date\nconst thirtyDaysAgo = new Date();\nthirtyDaysAgo.setDate(now.getDate() - 30);\n\nconsole.log(data);\n\n// Filter and format entries\nconst result = Object.entries(data)\n  .filter(([key, value]) => {\n    const dateStr = value.date;\n    if (!dateStr) return false;\n    const [day, month, year] = dateStr.split('/').map(Number);\n    const entryDate = new Date(year, month - 1, day);\n    return entryDate >= thirtyDaysAgo;\n  })\n  .map(([key, value]) => ({\n    json: {\n      key: key,\n      item: value.item || null,\n      price: value.price || null,\n      message: {\n        text: null,\n        date: value.date || null\n      }\n    }\n  }));\n\n// If no results, return a single item with an error message\nif (result.length === 0) {\n  return [{ json: { error: 'No entries in the last 30 days' } }];\n}\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        464
+      ],
+      "id": "2559225f-abc3-47de-a914-33bad2aa802b",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const entries = $input.all().map(item => item.json);\n\n// 🔒 If no entries found, return fallback message\nif (!entries.length || (entries.length === 1 && entries[0].error)) {\n\treturn [{\n\t\tjson: {\n\t\t\tmessage: '⚠️ No entries found in the last 30 days.\\nUse the format `Item Price` to start adding expenses.'\n\t\t}\n\t}];\n}\n\n// Helper: Get week number from a Date object\nfunction getWeekNumber(date) {\n\tconst start = new Date(date.getFullYear(), 0, 1);\n\tconst diff = date - start + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);\n\tconst oneWeek = 1000 * 60 * 60 * 24 * 7;\n\treturn Math.floor(diff / oneWeek) + 1;\n}\n\n// Build nested structure: week > date > expenses[]\nconst grouped = {};\nlet monthlyTotal = 0;\n\nfor (const entry of entries) {\n\tconst [day, month, year] = entry.message.date.split('/').map(Number);\n\tconst dateObj = new Date(year, month - 1, day);\n\tconst dateStr = `${entry.message.date}`;\n\tconst weekKey = `W${getWeekNumber(dateObj)}`;\n\n\tif (!grouped[weekKey]) grouped[weekKey] = {};\n\tif (!grouped[weekKey][dateStr]) grouped[weekKey][dateStr] = [];\n\n\tgrouped[weekKey][dateStr].push({\n\t\titem: entry.item,\n\t\tprice: Number(entry.price) || 0\n\t});\n\n\tmonthlyTotal += Number(entry.price) || 0;\n}\n\n// Build final report string\nlet report = `📊 *30-Day Weekly Expense Report*\\n\\n`;\nlet weekCounter = 1;\n\nfor (const [weekKey, dates] of Object.entries(grouped).sort()) {\n\treport += `📅 *Week-${weekCounter}* (${weekKey})\\n`;\n\tlet weekTotal = 0;\n\n\tfor (const [dateStr, expenses] of Object.entries(dates).sort()) {\n\t\treport += `\\n📆 _${dateStr}_\\n`;\n\t\texpenses.forEach((e, i) => {\n\t\t\treport += `  ${i + 1}. ${e.item} — ৳${e.price}\\n`;\n\t\t\tweekTotal += e.price;\n\t\t});\n\t\treport += `  ───────────────\\n`;\n\t\treport += `  📌 *Subtotal*: ৳${expenses.reduce((sum, e) => sum + e.price, 0)}\\n`;\n\t}\n\n\treport += `\\n💰 *Total Week-${weekCounter}*: ৳${weekTotal}\\n`;\n\treport += `──────────────────────────────\\n\\n`;\n\tweekCounter++;\n}\n\nreport += `🧾 *Total Monthly Expense*: ৳${monthlyTotal}\\n`;\nreport += `✅ _Generated on ${new Date().toLocaleDateString('en-GB')}_`;\n\nreturn [{ json: { message: report } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        464
+      ],
+      "id": "9d58006c-ad6c-408c-b6f0-f85bcbd09806",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "chatId": "=your_id",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        464
+      ],
+      "id": "d76c0d85-c5f4-426d-bf0e-6876d0065328",
+      "name": "Send a text message",
+      "webhookId": "fe1c21e6-ddd3-44e9-9d43-50145a598ffb",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8f20e47-30d9-49d4-b04c-532732b37fbe",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "=/help",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        1152
+      ],
+      "id": "74149b8d-7d40-4e8b-a3b7-82f2e0793cde",
+      "name": "show help menu"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=🆘 Help Menu\n\n➕ Add expense:  \nItemName Price  \nExample: Pen 15\n\n🗑️ /erase – Remove last added item  \n📊 /report – Show 30-day expense report  \n🧾 /help – Show this message  \n⚠️ /deleteAll – Delete **ALL** saved data permanently\n\nAll entries are saved with today’s date.  \nKeep it simple → one item, one price.\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        1136
+      ],
+      "id": "1e1c8ddf-db26-4610-87b3-01262dc06d7a",
+      "name": "Send a text message2",
+      "webhookId": "0606a850-de1b-4b89-a567-6b9e7ca690aa",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        672
+      ],
+      "id": "6f291564-7b41-487c-b148-a278d629404e",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "your_id",
+        "text": "⚠️ Oops! Something went wrong.   🔧 Please try again later.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -992,
+        672
+      ],
+      "id": "efa35625-66bc-4755-97d6-eddd526ee006",
+      "name": "Send a text message3",
+      "webhookId": "c70d9008-ee09-49ca-9f8c-47b0629ac183",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8f20e47-30d9-49d4-b04c-532732b37fbe",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "=/deleteAll",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        816
+      ],
+      "id": "cef7a158-4303-4835-9f32-8861f7355828",
+      "name": "DELETE ENTIRE DATABASE"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "https://url/.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        304,
+        800
+      ],
+      "id": "260ce45d-b159-400f-965a-0cfb9e21a62e",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $json.message.chat.id }}",
+        "message": "⚠️ ARE YOU SURE YOU WANT TO DELETE ENTIRE DATABASE?",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        800
+      ],
+      "id": "31ddadcc-f4ca-40e7-887b-a3ecba1d234d",
+      "name": "Send a text message4",
+      "webhookId": "c9efc67d-a8f2-4203-9027-176c2192c430",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=🚨 Entered input dosen't match any format\n🆘 Help Menu\n\n➕ Add expense:  \nItemName Price  \nExample: Pen 15\n\n🗑️ /erase – Remove last added item  \n📊 /report – Show 30-day expense report  \n🧾 /help – Show this message  \n⚠️ /deleteAll – Delete **ALL** saved data permanently\n\nAll entries are saved with today’s date.  \nKeep it simple → one item, one price.\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        1440
+      ],
+      "id": "2c526569-7514-434c-ba44-a0b6c3821399",
+      "name": "Send a text message5",
+      "webhookId": "9cad14ab-c6f9-43bd-adfe-9dae154484e4",
+      "credentials": {
+        "telegramApi": {
+          "id": "QYYb7kBSmBdTwurp",
+          "name": "EXPENSE TRACKER"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "ITEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "send confirmation message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ITEM": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERASE LAST ENTRY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERASE LAST ENTRY": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GIVE LAST WEEK REPORT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GIVE LAST WEEK REPORT": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DELETE ENTIRE DATABASE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "show help menu": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DELETE ENTIRE DATABASE": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "show help menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ff6ab459-5d8b-4b4e-a104-838d2d131a86",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6d0d435691a7c20ee5dd5831eaa96995d60660e19549e918911a26381cf8e3dd"
+  },
+  "id": "Is8cSJ5LQcYTPaZQ",
+  "tags": []
+}
