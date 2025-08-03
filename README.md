@@ -36,6 +36,7 @@ A smart expense tracking bot built with **n8n** and integrated with **Telegram**
 
 ---
 ## 🖼️ Example
+Milk 50
 ✅ Will be saved as:
 
 - Item: Milk  
