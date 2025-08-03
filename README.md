@@ -1,4 +1,6 @@
 # 💸 Telegram Expense Tracker Bot
+![Expense Tracker Demo](/assets/n8n_demo.png)
+
 
 A smart expense tracking bot built with **n8n** and integrated with **Telegram**. It allows users to log expenses, delete entries, and get weekly/monthly reports — all via simple chat commands. 💬📊
 
